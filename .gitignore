@@ -3,3 +3,9 @@
 ################################################################################
 
 /.vs/ScoutDemoService/v16
+/.vs
+/packages
+/ScoutDemoService/bin
+/ScoutDemoService/obj
+/ScoutDemoService.Core/bin/Debug/netcoreapp3.0
+/ScoutDemoService.Core/obj
