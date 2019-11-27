@@ -9,3 +9,6 @@
 /ScoutDemoService/obj
 /ScoutDemoService.Core/bin/Debug/netcoreapp3.0
 /ScoutDemoService.Core/obj
+/bin
+/obj
+/ScoutDemoService.Core/bin/Release/netcoreapp3.0
