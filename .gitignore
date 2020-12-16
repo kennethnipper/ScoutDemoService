@@ -12,3 +12,4 @@
 /bin
 /obj
 /ScoutDemoService.Core/bin/Release/netcoreapp3.0
+/ScoutDemoService.Core/bin/Debug/net5.0
