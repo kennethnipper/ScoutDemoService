@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MySql.Data.MySqlClient;
 using ScoutDemoService.Core.Models;
@@ -15,16 +14,23 @@ namespace ScoutDemoService.Core.Controllers
         /*
          * HttpPost in this format with Content-Type = application/json
          * https://localhost:44313/ScoutDemo
-         * {"firstName":"Bob","lastName":"Smith","emailAddress":"anyone@anywhere.com","address1":"123 Main St.","address2":"Apt 100","city":"Rome","state":"GA","zipCode":"12345"}
+         * [{"firstName":"Bob","lastName":"Smith","emailAddress":"anyone@anywhere.com","address1":"123 Main St.","address2":"Apt 100","city":"Rome","state":"GA","zipCode":"12345"}]
          */
         [HttpPost]
-        public IActionResult Index([FromBody]PersonModel Person)
+        public IEnumerable<PersonModel> Index([FromBody] List<PersonModel> InputPeople)
         {
-            if (InsertPerson(Person) > 0)
+            List<PersonModel> People = new List<PersonModel>();
+            foreach (PersonModel Person in InputPeople)
             {
-                return StatusCode(StatusCodes.Status200OK);
+                Boolean AlreadyExists = false;
+                if (GetPersonByID(Person.ID) != null) { AlreadyExists = true; }
+                Int32 PersonID = InsertPerson(Person, AlreadyExists);
+                if (PersonID > 0)
+                {
+                    People.Add(GetPersonByID(PersonID));
+                }
             }
-            return StatusCode(StatusCodes.Status304NotModified);
+            return People;
         }
         [HttpGet]
         public IEnumerable<PersonModel> Get(Int32? ID)
@@ -70,27 +76,49 @@ namespace ScoutDemoService.Core.Controllers
                     if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
                     if (Int32.Parse(Command.ExecuteScalar().ToString()) == 0)
                     {
-                        InsertPerson(new PersonModel() { FirstName = "Bob", LastName = "Smith", EmailAddress = "anyone@anywhere.com", Address1 = "123 Main St.", Address2 = "Apt 100", City = "Rome", State = "GA", ZipCode = "12345" });
+                        InsertPerson(new PersonModel() { FirstName = "Bob", LastName = "Smith", EmailAddress = "anyone@anywhere.com", Address1 = "123 Main St.", Address2 = "Apt 100", City = "Rome", State = "GA", ZipCode = "12345" }, false);
                     }
                 }
             }
         }
-        public Int32 InsertPerson(PersonModel PM)
+        public Int32 InsertPerson(PersonModel PM, Boolean AlreadyExists)
         {
             using (MySqlConnection Connection = new MySqlConnection(ConnectionString))
             {
-                using (MySqlCommand Command = new MySqlCommand("insert into scoutdemo.people(firstname, lastname, emailaddress, address1, address2, city, state, zipcode) values (@firstname, @lastname, @emailaddress, @address1, @address2, @city, @state, @zipcode)", Connection))
+                if (!AlreadyExists)
                 {
-                    if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
-                    Command.Parameters.Add("@firstname", MySqlDbType.VarChar).Value = PM.FirstName;
-                    Command.Parameters.Add("@lastname", MySqlDbType.VarChar).Value = PM.LastName;
-                    Command.Parameters.Add("@emailaddress", MySqlDbType.VarChar).Value = PM.EmailAddress;
-                    Command.Parameters.Add("@address1", MySqlDbType.VarChar).Value = PM.Address1;
-                    Command.Parameters.Add("@address2", MySqlDbType.VarChar).Value = PM.Address2;
-                    Command.Parameters.Add("@city", MySqlDbType.VarChar).Value = PM.City;
-                    Command.Parameters.Add("@state", MySqlDbType.VarChar).Value = PM.State;
-                    Command.Parameters.Add("@zipcode", MySqlDbType.VarChar).Value = PM.ZipCode;
-                    return Command.ExecuteNonQuery();
+                    using (MySqlCommand Command = new MySqlCommand("insert into scoutdemo.people(firstname, lastname, emailaddress, address1, address2, city, state, zipcode) values (@firstname, @lastname, @emailaddress, @address1, @address2, @city, @state, @zipcode);", Connection))
+                    {
+                        if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
+                        Command.Parameters.Add("@firstname", MySqlDbType.VarChar).Value = PM.FirstName;
+                        Command.Parameters.Add("@lastname", MySqlDbType.VarChar).Value = PM.LastName;
+                        Command.Parameters.Add("@emailaddress", MySqlDbType.VarChar).Value = PM.EmailAddress;
+                        Command.Parameters.Add("@address1", MySqlDbType.VarChar).Value = PM.Address1;
+                        Command.Parameters.Add("@address2", MySqlDbType.VarChar).Value = PM.Address2;
+                        Command.Parameters.Add("@city", MySqlDbType.VarChar).Value = PM.City;
+                        Command.Parameters.Add("@state", MySqlDbType.VarChar).Value = PM.State;
+                        Command.Parameters.Add("@zipcode", MySqlDbType.VarChar).Value = PM.ZipCode;
+                        Command.ExecuteNonQuery();
+                        return (Int32)Command.LastInsertedId;
+                    }
+                }
+                else
+                {
+                    using (MySqlCommand Command = new MySqlCommand("update scoutdemo.people set firstname = @firstname, lastname = @lastname, emailaddress = @emailaddress, address1 = @address1, address2 = @address2, city = @city, state = @state, zipcode = @zipcode where id = @id;", Connection))
+                    {
+                        if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
+                        Command.Parameters.Add("@id", MySqlDbType.Int32).Value = PM.ID;
+                        Command.Parameters.Add("@firstname", MySqlDbType.VarChar).Value = PM.FirstName;
+                        Command.Parameters.Add("@lastname", MySqlDbType.VarChar).Value = PM.LastName;
+                        Command.Parameters.Add("@emailaddress", MySqlDbType.VarChar).Value = PM.EmailAddress;
+                        Command.Parameters.Add("@address1", MySqlDbType.VarChar).Value = PM.Address1;
+                        Command.Parameters.Add("@address2", MySqlDbType.VarChar).Value = PM.Address2;
+                        Command.Parameters.Add("@city", MySqlDbType.VarChar).Value = PM.City;
+                        Command.Parameters.Add("@state", MySqlDbType.VarChar).Value = PM.State;
+                        Command.Parameters.Add("@zipcode", MySqlDbType.VarChar).Value = PM.ZipCode;
+                        Command.ExecuteNonQuery();
+                        return PM.ID;
+                    }
                 }
             }
         }
