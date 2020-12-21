@@ -10,7 +10,7 @@ namespace ScoutDemoService.Core.Controllers
     [Route("[controller]")]
     public class ScoutDemoController : ControllerBase
     {
-        private string ConnectionString = "Server=scoutdemoservice.db;Uid=root;Pwd=scoutdemopassword1234!;";
+        private string ConnectionString = "Server=scoutdb;Uid=root;Pwd=scoutdemopassword1234!;";
         /*
          * HttpPost in this format with Content-Type = application/json
          * https://localhost:44313/ScoutDemo
@@ -35,7 +35,6 @@ namespace ScoutDemoService.Core.Controllers
         [HttpGet]
         public IEnumerable<PersonModel> Get(Int32? ID)
         {
-            PopulateEmptyDB();
             List<PersonModel> PersonList = new List<PersonModel>();
             if (ID.HasValue)
             {
@@ -46,40 +45,6 @@ namespace ScoutDemoService.Core.Controllers
                 PersonList = GetPeople();
             }
             return PersonList;
-        }
-        public void PopulateEmptyDB()
-        {
-            using (MySqlConnection Connection = new MySqlConnection(ConnectionString))
-            {
-                using (MySqlCommand Command = new MySqlCommand("CREATE SCHEMA IF NOT EXISTS scoutdemo;", Connection))
-                {
-                    if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
-                    Command.ExecuteNonQuery();
-                }
-                using (MySqlCommand Command = new MySqlCommand("CREATE TABLE IF NOT EXISTS scoutdemo.people(`id` int NOT NULL AUTO_INCREMENT, " +
-                        "`firstname` varchar(45) DEFAULT NULL, " +
-                        "`lastname` varchar(45) DEFAULT NULL, " +
-                        "`emailaddress` varchar(45) DEFAULT NULL, " +
-                        "`address1` varchar(45) DEFAULT NULL, " +
-                        "`address2` varchar(45) DEFAULT NULL, " +
-                        "`city` varchar(45) DEFAULT NULL, " +
-                        "`state` varchar(45) DEFAULT NULL, " +
-                        "`zipcode` varchar(45) DEFAULT NULL, " +
-                        "PRIMARY KEY (`id`), " +
-                        "UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)", Connection))
-                {
-                    if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
-                    Command.ExecuteNonQuery();
-                }
-                using (MySqlCommand Command = new MySqlCommand("select count(id) from scoutdemo.people", Connection))
-                {
-                    if (Connection.State != System.Data.ConnectionState.Open) { Connection.Open(); }
-                    if (Int32.Parse(Command.ExecuteScalar().ToString()) == 0)
-                    {
-                        InsertPerson(new PersonModel() { FirstName = "Bob", LastName = "Smith", EmailAddress = "anyone@anywhere.com", Address1 = "123 Main St.", Address2 = "Apt 100", City = "Rome", State = "GA", ZipCode = "12345" }, false);
-                    }
-                }
-            }
         }
         public Int32 InsertPerson(PersonModel PM, Boolean AlreadyExists)
         {

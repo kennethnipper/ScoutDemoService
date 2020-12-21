@@ -2,14 +2,16 @@ version: '3.4'
 services:
   scoutdemoservice.core:
     image: '${DOCKER_REGISTRY-}scoutdemoservicecore'
-    container_name: scoutdemoservice
     build:
       context: .
       dockerfile: ScoutDemoService.Core/Dockerfile
     links: 
-        - scoutdemoservice.db
-  scoutdemoservice.db:
+        - scoutdb
+    container_name: scoutdemoservice.core
+  scoutdb:
     image: 'mysql:latest'
-    container_name: scoutdemoservice.db
+    container_name: scoutdb
     environment:
       - MYSQL_ROOT_PASSWORD=scoutdemopassword1234!
+    volumes:
+            - 'G:\Github\ScoutDemoService\ScoutDemoService.Core\MySqlInit:/docker-entrypoint-initdb.d'
