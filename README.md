@@ -6,9 +6,18 @@ You will need to set permissions on the folder so that the OS has access.  For m
 
 Obviously, you will also need to install docker and docker-compose.  Instructions can be found here: https://docs.docker.com/compose/install/
 
-For linux, I did have to make one change while I research how to implement certs.  Change the environment settings to this:
+Linux Instructions:
+run this from the command line:
+dotnet dev-certs https --clean
+dotnet dev-certs https -ep ${HOME}/.aspnet/https/aspnetapp.pfx -p {create a password here}
+
+Make these changes to the docker-compose.yml file, to add the certificate for SSL:
 
 environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-It removes SSL support.
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password={Password defined above}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+volumes:
+      - ~/.aspnet/https:/https:ro
+      
