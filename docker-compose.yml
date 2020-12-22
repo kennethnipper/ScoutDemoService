@@ -19,9 +19,9 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
   scoutdb:
-    image: 'mysql:latest'
+    image: 'mysql:8.0.22'
     container_name: scoutdb
     environment:
       - MYSQL_ROOT_PASSWORD=scoutdemopassword1234!
     volumes:
-            - 'G:\Github\ScoutDemoService\ScoutDemoService.Core\MySqlInit:/docker-entrypoint-initdb.d'
+            - './ScoutDemoService.Core/MySqlInit:/docker-entrypoint-initdb.d'
